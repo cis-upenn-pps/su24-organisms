@@ -1,10 +1,7 @@
-package organisms.g0;
+package organisms.g5;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Random;
-
-import organisms.Move;
 
 public class Utils {
 	/**
