@@ -1,7 +1,11 @@
 # Overview
 
-Consider an electronic world consisting of an _m_ by _n_ grid. Virtual "organisms" can exist on this grid, with an organism able to occupy a cell on the grid. Organisms have energy that can be gained or lost
-in a variety of ways. When an organism runs out of energy it dies, and vacates the cell it formerly occupied. An organism can have at most _M_ units of energy. An organism may do one of several
+Consider an electronic world consisting of an _m_ by _n_ grid. 
+
+Virtual "organisms" can exist on this grid, with an organism able to occupy a cell on the grid. Organisms have energy that can be gained or lost
+in a variety of ways. 
+
+When an organism runs out of energy it dies, and vacates the cell it formerly occupied. An organism can have at most _M_ units of energy. An organism may do one of several
 things during a virtual time cycle:
 * Move one cell horizontally or vertically in any direction. The world wraps, so that an organism traveling off the right edge of the grid appears on the left edge, and similarly for the top and bottom edges. A move uses some energy.
 * Stay put and do nothing. This move uses a small amount of energy.

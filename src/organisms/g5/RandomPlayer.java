@@ -1,4 +1,4 @@
-package organisms.g0;
+package organisms.g5;
 
 import organisms.Move;
 import organisms.ui.OrganismsGame;
