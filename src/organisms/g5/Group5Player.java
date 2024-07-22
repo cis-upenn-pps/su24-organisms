@@ -7,6 +7,11 @@ import organisms.OrganismsPlayer;
 import java.awt.Color;
 
 public class Group5Player implements OrganismsPlayer {
+    enum OCCUPANT {
+        empty,              //i.e no foreign object/organism on this square
+        other_organism,     //can be of the same or a different species
+        food
+    }
     private OrganismsGame game;
     private int currentFoodHere = 0;
 
@@ -46,12 +51,58 @@ public class Group5Player implements OrganismsPlayer {
             for (int step = 0; step < steps; step++) {
                 currentX += directions[i][0];
                 currentY += directions[i][1];
-                if (neighborDirs[i] != -1) {  break; } // end count if neighbor exists
-                if (foodDirs[i]) { foodCounts[i]++; }
+                if (neighborDirs[i] != -1) {
+                    break;
+                } // end count if neighbor exists
+                if (foodDirs[i]) {
+                    foodCounts[i]++;
+                }
             }
         }
 
         return foodCounts;
+    }
+
+    /**
+     * Calculates the immediate cost (energy gain minus energy expenditure) of a particular move.
+     * @param move boolean representing whether the organism will move one space across the board (TRUE),
+     *             or remain in place (FALSE)
+     * @param occupant enum representing the state of the space which we propose the organism inhabit.
+     *                 This could be the same square (if staying in place) or a new one (if moving)
+     * @param reproduce boolean representing whether the organism will reproduce.
+     *                  An error will be thrown if we try to both move and reproduce simultaneously.
+     * NOTE immediate means next move. If we move onto e.g. a square with 4 units of food,
+     *                  only one unit will count against the immediate cost of that move.
+     * @return an int representing the net energy change associated with a single move.
+     */
+    public int costMove(boolean move, OCCUPANT occupant, boolean reproduce) {
+
+        if (reproduce)  {
+
+            if (move) throw new IllegalArgumentException("Bad argument! Organism cannot both reproduce and move in the same turn");
+            if (occupant.equals(OCCUPANT.other_organism)) throw new IllegalArgumentException("Bad argument! Conflicting values for reproduce and occupant.");
+            return -game.v();
+        }
+
+        if (!move) {
+
+            if (occupant.equals(OCCUPANT.other_organism)) throw new IllegalArgumentException("Bad argument! Conflicting values for move and occupant.");
+            if (occupant.equals(OCCUPANT.food)) return game.u() - game.s();             //gain from food (eat) - cost of staying (x)
+            else return -game.s();
+
+        }
+
+        else if (move) {
+            if (occupant.equals(OCCUPANT.food)) return game.u() - game.v();              //gain from food (eat) - cost of movement to get that food (exert)
+            if (occupant.equals(OCCUPANT.empty)) return -game.v();
+            if (occupant.equals(OCCUPANT.other_organism)) {
+                System.err.println("This move has poor efficiency! Please consider remain.");
+                return -game.v();
+            }
+        }
+
+        //we should never get here
+        throw new IllegalArgumentException("No valid strategy for this combination of arguments. Please try again.");
     }
 
     @Override
@@ -60,10 +111,15 @@ public class Group5Player implements OrganismsPlayer {
 
         // If there is food, stay put until all foods consumed
         if (foodHere > 0) {
+
             currentFoodHere = foodHere;
+            System.out.println("Action " + Action.STAY_PUT.toString() + ", " + foodHere + " of food remaining on this square.");
             return Move.movement(Action.STAY_PUT);
+
         } else if (currentFoodHere > 0) {
+
             currentFoodHere = foodHere; // update the remaining food
+            System.out.println("Action " + Action.STAY_PUT.toString() + ", " + foodHere + " of food remaining on this square.");
             return Move.movement(Action.STAY_PUT);
         }
 
@@ -77,6 +133,7 @@ public class Group5Player implements OrganismsPlayer {
 
         // Find the direction with the most food blocks
         int maxFoodDirection = 0, maxFoodCount = 0;
+
         for (int i = 0; i < 4; i++) {
             if (foodCounts[i] > maxFoodCount) {
                 maxFoodCount = foodCounts[i];
@@ -93,6 +150,7 @@ public class Group5Player implements OrganismsPlayer {
             default -> Action.STAY_PUT;
         };
 
+        System.out.println("Action " + moveAction.toString() + " , " + foodCounts[maxFoodDirection] + " units of food in this direction.");
         return Move.movement(moveAction);
     }
 
