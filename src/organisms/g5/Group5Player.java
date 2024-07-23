@@ -79,8 +79,8 @@ public class Group5Player implements OrganismsPlayer {
     protected double netBenefit(boolean move, OCCUPANT occupant, boolean reproduce, Optional<double[]> override) {
 
         //get game costings (default values)
-        double v1 = game.v();              //reproduce
-        double v2 = game.v();              //move
+        double v1 = game.v();              //move
+        double v2 = game.v();              //reproduce
         double s = game.s();
         double u = game.u();
 
@@ -118,7 +118,7 @@ public class Group5Player implements OrganismsPlayer {
         //we should never get here
         throw new IllegalArgumentException("No valid strategy for this combination of arguments. Please try again.");
     }
-    
+
     @Override
     public Move move(int foodHere, int energyLeft, boolean foodN, boolean foodE, boolean foodS, boolean foodW,
                      int neighborN, int neighborE, int neighborS, int neighborW) throws Exception {
