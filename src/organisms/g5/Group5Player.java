@@ -118,8 +118,7 @@ public class Group5Player implements OrganismsPlayer {
         //we should never get here
         throw new IllegalArgumentException("No valid strategy for this combination of arguments. Please try again.");
     }
-
-
+    
     @Override
     public Move move(int foodHere, int energyLeft, boolean foodN, boolean foodE, boolean foodS, boolean foodW,
                      int neighborN, int neighborE, int neighborS, int neighborW) throws Exception {
@@ -171,7 +170,7 @@ public class Group5Player implements OrganismsPlayer {
      * @param energyW a value (/10) that represents the priority that an organism should give to conserving energy
      * @param repoW a value (/10) that represents the priority that an organism should give to reproducing
      * @return an array of 4 ints that represent new values of v1, v2, s, u, in that order.
-     * Note that value of v is split into 2 (v1 and v2) to allow separate costs to be applied to reproduction and movement.
+     * Note that value of v is split into 2 (v1 and v2) to allow separate costs to be applied to movement(v1) and reproduction(v2).
      */
     protected double[] applyBias(double foodW, double energyW, double repoW) {
 
@@ -179,7 +178,7 @@ public class Group5Player implements OrganismsPlayer {
         if (foodW < 0 || energyW < 0 || repoW < 0 || foodW > 10 || energyW > 10 || repoW > 10) throw new IllegalArgumentException("Bad input! Priority values must be between 0 and 10, inclusive.");
 
         //container for return value
-        double[] costings = new double[4];            //order of variables is V1, V2, S, U
+        double[] netBenefits = new double[4];            //order of variables is V1, V2, S, U
 
         //work out priorities - expressed as a proportion of the max (30)
         double fp = (foodW / 30);
@@ -190,14 +189,14 @@ public class Group5Player implements OrganismsPlayer {
         double v = 20 - 2;
         double u = 500 - 10;
 
-        //change costings to reflect new biases
-        costings[0] = game.v();                     //leave cost of movement the same (never changed by weightings)
-        costings[1] = (game.v() - (v * rp));        //reduce cost of reproduction by scaling factor rp
-        costings[2] = (game.s() - (1 * ep));        //reduce cost of staying in place by scaling factor ep
-        costings[3] = (game.u() + (u * fp));        //increase the benefit of food by scaling factor fp
+        //change net benefits to reflect new biases
+        netBenefits[0] = game.v();                     //leave cost of movement the same (never changed by weightings)
+        netBenefits[1] = (game.v() - (v * rp));        //reduce cost of reproduction by scaling factor rp
+        netBenefits[2] = (game.s() - (1 * ep));        //reduce cost of staying in place by scaling factor ep
+        netBenefits[3] = (game.u() + (u * fp));        //increase the benefit of food by scaling factor fp
 
-        //return new set of costings with biases applied
-        return costings;
+        //return new set of net benefits [order: v1, v2, s, u] with biases applied
+        return netBenefits;
 
     }
 
