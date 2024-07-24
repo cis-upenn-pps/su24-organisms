@@ -7,7 +7,7 @@ import organisms.ui.OrganismsGame;
 import java.awt.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class Group3Player implements OrganismsPlayer {
+public class Group3PlayerSkyler implements OrganismsPlayer {
     private OrganismsGame game;
     private int dna;
     private ThreadLocalRandom random;
