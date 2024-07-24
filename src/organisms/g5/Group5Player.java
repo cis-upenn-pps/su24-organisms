@@ -5,6 +5,7 @@ import organisms.ui.OrganismsGame;
 import organisms.OrganismsPlayer;
 
 import java.awt.Color;
+import java.util.Optional;
 
 public class Group5Player implements OrganismsPlayer {
 
@@ -69,33 +70,48 @@ public class Group5Player implements OrganismsPlayer {
      *                 This could be the same square (if staying in place) or a new one (if moving)
      * @param reproduce boolean representing whether the organism will reproduce.
      *                  An error will be thrown if we try to both move and reproduce simultaneously.
+     * @param override an optional array of 4 integers that are used to price V1, V2, S, U
+     *                 If no value is specified, default game-set parameters will be used.
      * NOTE immediate means next move. If we move onto e.g. a square with 4 units of food,
-     *                  only one unit will count against the immediate cost of that move.
+     *                  only one unit will count against the immediate cost of that move
      * @return an int representing the net energy change associated with a single move.
      */
-    int costMove(boolean move, OCCUPANT occupant, boolean reproduce) {
+    protected double netBenefit(boolean move, OCCUPANT occupant, boolean reproduce, Optional<double[]> override) {
+
+        //get game costings (default values)
+        double v1 = game.v();              //move
+        double v2 = game.v();              //reproduce
+        double s = game.s();
+        double u = game.u();
+
+        //give player opportunity to override these
+        if (override.isPresent() && override.get().length == 4) {
+            v1 = override.get()[0];
+            v2 = override.get()[1];
+            s = override.get()[2];
+            u = override.get()[3];
+        }
+
+        //calculate override of specific moves
 
         if (reproduce)  {
-
-            if (move) throw new IllegalArgumentException("Bad argument! Organism cannot both reproduce and move in the same turn");
+            if (move) throw new IllegalArgumentException("Bad argument! Conflicting values for reproduce and move.");
             if (occupant.equals(OCCUPANT.other_organism)) throw new IllegalArgumentException("Bad argument! Conflicting values for reproduce and occupant.");
-            return -game.v();
+            return -v2;
         }
 
         if (!move) {
 
             if (occupant.equals(OCCUPANT.other_organism)) throw new IllegalArgumentException("Bad argument! Conflicting values for move and occupant.");
-            if (occupant.equals(OCCUPANT.food)) return game.u() - game.s();             //gain from food (eat) - cost of staying (x)
-            else return -game.s();
+            if (occupant.equals(OCCUPANT.food)) return u - s;             //gain from food (eat) - cost of staying (x)
+            else return -s;
 
         }
 
         else if (move) {
-            if (occupant.equals(OCCUPANT.food)) return game.u() - game.v();              //gain from food (eat) - cost of movement to get that food (exert)
-            if (occupant.equals(OCCUPANT.empty)) return -game.v();
-            if (occupant.equals(OCCUPANT.other_organism)) {
-                System.err.println("This move has poor efficiency! Please consider remain.");
-                return -game.v();
+            if (occupant.equals(OCCUPANT.food)) return u - v1;              //gain from food (eat) - cost of movement to get that food (exert)
+            if (occupant.equals(OCCUPANT.empty)) return -v1;
+            if (occupant.equals(OCCUPANT.other_organism)) {System.err.println("This move has poor efficiency! Please consider remain."); return -game.v();
             }
         }
 
@@ -146,6 +162,42 @@ public class Group5Player implements OrganismsPlayer {
 
         System.out.println("Action " + moveAction.toString() + " , " + foodCounts[maxFoodDirection] + " units of food in this direction.");
         return Move.movement(moveAction);
+    }
+
+    /**
+     * Applies a bias to the values of v, s, u that determine the cost to the organism of moving across the board.
+     * @param foodW a value (/10) that represents the priority that an organism should give to food
+     * @param energyW a value (/10) that represents the priority that an organism should give to conserving energy
+     * @param repoW a value (/10) that represents the priority that an organism should give to reproducing
+     * @return an array of 4 ints that represent new values of v1, v2, s, u, in that order.
+     * Note that value of v is split into 2 (v1 and v2) to allow separate costs to be applied to movement(v1) and reproduction(v2).
+     */
+    protected double[] applyBias(double foodW, double energyW, double repoW) {
+
+        //check inputs
+        if (foodW < 0 || energyW < 0 || repoW < 0 || foodW > 10 || energyW > 10 || repoW > 10) throw new IllegalArgumentException("Bad input! Priority values must be between 0 and 10, inclusive.");
+
+        //container for return value
+        double[] netBenefits = new double[4];            //order of variables is V1, V2, S, U
+
+        //work out priorities - expressed as a proportion of the max (30)
+        double fp = (foodW / 30);
+        double ep = (energyW / 30);
+        double rp = (repoW / 30);
+
+        // work out deltas for each game-set variable
+        double v = 20 - 2;
+        double u = 500 - 10;
+
+        //change net benefits to reflect new biases
+        netBenefits[0] = game.v();                     //leave cost of movement the same (never changed by weightings)
+        netBenefits[1] = (game.v() - (v * rp));        //reduce cost of reproduction by scaling factor rp
+        netBenefits[2] = (game.s() - (1 * ep));        //reduce cost of staying in place by scaling factor ep
+        netBenefits[3] = (game.u() + (u * fp));        //increase the benefit of food by scaling factor fp
+
+        //return new set of net benefits [order: v1, v2, s, u] with biases applied
+        return netBenefits;
+
     }
 
     @Override
