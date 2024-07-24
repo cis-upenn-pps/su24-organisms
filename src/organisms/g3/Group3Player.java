@@ -34,7 +34,7 @@ public class Group3Player implements OrganismsPlayer {
                      boolean foodS, boolean foodW, int neighborN, int neighborE,
                      int neighborS, int neighborW) {
 
-        if (energyLeft >= 400) {
+        if (energyLeft >= 350) {
             int childPosIndex = this.random.nextInt(1, 5);
             Action childPosChoice = Action.fromInt(childPosIndex);
             int childKey = this.random.nextInt();
