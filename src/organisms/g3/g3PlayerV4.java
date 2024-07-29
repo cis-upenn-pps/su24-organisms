@@ -101,21 +101,28 @@ public class g3PlayerV4 implements OrganismsPlayer {
         if (energyLeft < maxEnergy / 2) {
             repValue = -50;
         }
+        //boolean foodBool = true;
+        int neighbor = -1;
+
 
         for(int i = 1; i < 5; i++) {
 
             if (i == 1) {
                 foodBool = foodW;
+                neighbor = neighborW;
             } else if (i == 2) {
                 foodBool = foodN;
+                neighbor = neighborN;
             } else if (i == 3) {
                 foodBool = foodE;
+                neighbor = neighborE;
             } else if (i == 4) {
                 foodBool = foodS;
+                neighbor = neighborS;
             }
 
 
-            if (foodBool) {
+            if (foodBool && neighbor == -1) {
                 int moveAdd = (energyLeft - moveEnergyLoss + maxFoodUnits);
                 int repAdd = (energyLeft - moveEnergyLoss + maxFoodUnits + repValue);
 
@@ -127,11 +134,12 @@ public class g3PlayerV4 implements OrganismsPlayer {
                 int repAdd = (energyLeft - moveEnergyLoss + repValue);
                 moveDecisions.add(moveAdd);
                 repDecisions.add(repAdd);
-                decisionWeightStay = energyLeft;
+                decisionWeightStay = energyLeft - stayPutUnits;
 
             }
         }
 
+        adjustWeights(moveDecisions, neighborN, neighborE, neighborS, neighborW);
 
         int repMax = Collections.max(repDecisions);
         int repInt = repDecisions.indexOf(repMax)+1;
@@ -173,7 +181,9 @@ public class g3PlayerV4 implements OrganismsPlayer {
         } else {
             if(movMax>decisionWeightStay){
                 if(movBOOL){
-                    return moveInSquarePattern();
+                    int childKey = random.nextInt(1, 255);
+                    System.out.println("reproduced @: " + childPosChoice);
+                    return Move.reproduce(childPosChoice, childKey);
                 }
                 else {
                     actionChoice = Action.fromInt(movInt);
@@ -194,10 +204,29 @@ public class g3PlayerV4 implements OrganismsPlayer {
 
     }
 
+    private boolean checkOrganismInDirection(int neighborValue) {
+        return neighborValue == 115;
+    }
+
+    private void adjustWeights(ArrayList<Integer> moveDecisions, int neighborN, int neighborE, int neighborS, int neighborW) {
+        if (checkOrganismInDirection(neighborW)) {
+            moveDecisions.set(2, moveDecisions.get(2) + 25); // East
+        }
+        if (checkOrganismInDirection(neighborN)) {
+            moveDecisions.set(3, moveDecisions.get(3) + 25); // South
+        }
+        if (checkOrganismInDirection(neighborE)) {
+            moveDecisions.set(0, moveDecisions.get(0) + 25); // West
+        }
+        if (checkOrganismInDirection(neighborS)) {
+            moveDecisions.set(1, moveDecisions.get(1) + 25); // North
+        }
+    }
+
 
 
     public int externalState() {
-        return 0;
+        return 115;
     }
 }
 
