@@ -98,7 +98,7 @@ public class g3PlayerV4 implements OrganismsPlayer {
         ArrayList<Integer> repDecisions = new ArrayList<>();
 
 
-        if (energyLeft < maxEnergy / 2) {
+        if (energyLeft < maxEnergy/ 2) {
             repValue = -50;
         }
         //boolean foodBool = true;
@@ -111,11 +111,11 @@ public class g3PlayerV4 implements OrganismsPlayer {
                 foodBool = foodW;
                 neighbor = neighborW;
             } else if (i == 2) {
-                foodBool = foodN;
-                neighbor = neighborN;
-            } else if (i == 3) {
                 foodBool = foodE;
                 neighbor = neighborE;
+            } else if (i == 3) {
+                foodBool = foodN;
+                neighbor = neighborN;
             } else if (i == 4) {
                 foodBool = foodS;
                 neighbor = neighborS;
