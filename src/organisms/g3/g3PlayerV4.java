@@ -18,8 +18,6 @@ public class g3PlayerV4 implements OrganismsPlayer {
     private OrganismsGame game;
     private int dna;
 
-    private int currentX = 0;
-    private int currentY = 0;
     private boolean movingRight = true;
     private boolean movingDown = true;
 
@@ -36,40 +34,6 @@ public class g3PlayerV4 implements OrganismsPlayer {
 
     public Color color() {
         return new Color(255, 255, 204, 255);
-    }
-
-    private Move moveInSquarePattern() {
-        if (movingRight) {
-            if (currentX < 4) {
-                currentX++;
-                return Move.movement(Action.EAST);
-            } else {
-                movingRight = false;
-                if (movingDown && currentY < 4) {
-                    currentY++;
-                    return Move.movement(Action.SOUTH);
-                } else {
-                    movingDown = false;
-                    currentY--;
-                    return Move.movement(Action.NORTH);
-                }
-            }
-        } else {
-            if (currentX > 0) {
-                currentX--;
-                return Move.movement(Action.WEST);
-            } else {
-                movingRight = true;
-                if (movingDown && currentY < 4) {
-                    currentY++;
-                    return Move.movement(Action.SOUTH);
-                } else {
-                    movingDown = false;
-                    currentY--;
-                    return Move.movement(Action.NORTH);
-                }
-            }
-        }
     }
 
     public Move move(int foodHere, int energyLeft, boolean foodN, boolean foodE,
@@ -181,9 +145,11 @@ public class g3PlayerV4 implements OrganismsPlayer {
         } else {
             if(movMax>decisionWeightStay){
                 if(movBOOL){
-                    int childKey = random.nextInt(1, 255);
-                    System.out.println("reproduced @: " + childPosChoice);
-                    return Move.reproduce(childPosChoice, childKey);
+                   //int childKey = random.nextInt(1, 255);
+                    //System.out.println("reproduced @: " + childPosChoice);
+                    //return Move.reproduce(childPosChoice, childKey);
+                    actionChoice = Action.fromInt(random.nextInt(1,5));
+
                 }
                 else {
                     actionChoice = Action.fromInt(movInt);
