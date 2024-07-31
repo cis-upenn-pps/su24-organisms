@@ -40,12 +40,10 @@ public class g3PlayerV4 implements OrganismsPlayer {
                      boolean foodS, boolean foodW, int neighborN, int neighborE,
                      int neighborS, int neighborW) {
 
-
         int actionIndex = 0;
         Action actionChoice = Action.fromInt(actionIndex);
         int childPosIndex = 1;
         Action childPosChoice = Action.fromInt(1);
-
 
         int decisionWeightStay = 0;
 
@@ -56,21 +54,20 @@ public class g3PlayerV4 implements OrganismsPlayer {
         int moveEnergyLoss = game.v();
         int maxFoodUnits = game.K();
         int stayPutUnits = game.s();
-        int repValue = 100;
+
+        int repValue = 75;
+        int repValueChange = -25;
 
         ArrayList<Integer> moveDecisions = new ArrayList<>();
         ArrayList<Integer> repDecisions = new ArrayList<>();
 
-
         if (energyLeft < maxEnergy/ 2) {
-            repValue = -50;
+            repValue = repValueChange;
         }
         //boolean foodBool = true;
         int neighbor = -1;
 
-
         for(int i = 1; i < 5; i++) {
-
             if (i == 1) {
                 foodBool = foodW;
                 neighbor = neighborW;
@@ -103,22 +100,22 @@ public class g3PlayerV4 implements OrganismsPlayer {
         adjustWeights(moveDecisions, neighborN, neighborE, neighborS, neighborW);
 
         int repMax = Collections.max(repDecisions);
-        int repInt = repDecisions.indexOf(repMax)+1;
+        int repInt = repDecisions.indexOf(repMax) + 1;
         int movMax = Collections.max(moveDecisions);
-        int movInt = moveDecisions.indexOf(movMax)+1;
+        int movInt = moveDecisions.indexOf(movMax) + 1;
 
         int firstElementREP = repDecisions.get(0);
         boolean repBOOL = repDecisions.stream().allMatch(element -> element.equals(firstElementREP));
         int firstElementMOV = moveDecisions.get(0);
         boolean movBOOL = moveDecisions.stream().allMatch(element -> element.equals(firstElementMOV));
 
-        System.out.println("--------------------------------");
-        System.out.println("decision for organism: " + this.dna);
-        System.out.println("move weights:" + moveDecisions);
-        System.out.println("max movement weight:" + movMax);
-        System.out.println("rep weights:" +repDecisions);
-        System.out.println("max reproduce weight:" + repMax);
-        System.out.println("decision to stay weight: "+ decisionWeightStay);
+//        System.out.println("--------------------------------");
+//        System.out.println("decision for organism: " + this.dna);
+//        System.out.println("move weights:" + moveDecisions);
+//        System.out.println("max movement weight:" + movMax);
+//        System.out.println("rep weights:" +repDecisions);
+//        System.out.println("max reproduce weight:" + repMax);
+//        System.out.println("decision to stay weight: "+ decisionWeightStay);
 
         if (repMax >= movMax) {
             if (repMax > decisionWeightStay) {
@@ -129,11 +126,11 @@ public class g3PlayerV4 implements OrganismsPlayer {
                     childPosChoice = Action.fromInt(repInt);
                 }
                 int childKey = random.nextInt(1, 255);
-                System.out.println("reproduced @: " + childPosChoice);
+//                System.out.println("reproduced @: " + childPosChoice);
                 return Move.reproduce(childPosChoice, childKey);
             }
             else {
-                System.out.println(Action.fromInt(0));
+//                System.out.println(Action.fromInt(0));
                 return Move.movement(Action.fromInt(0));
 
             }
@@ -149,11 +146,11 @@ public class g3PlayerV4 implements OrganismsPlayer {
                 else {
                     actionChoice = Action.fromInt(movInt);
                 }
-                System.out.println("moved to: " + actionChoice);
+//                System.out.println("moved to: " + actionChoice);
                 return Move.movement(actionChoice);
             }
             else {
-                System.out.println(Action.fromInt(0));
+//                System.out.println(Action.fromInt(0));
                 return Move.movement(Action.fromInt(0));
             }
         }
@@ -177,7 +174,7 @@ public class g3PlayerV4 implements OrganismsPlayer {
             moveDecisions.set(1, moveDecisions.get(1) + 25); // North
         }
     }
-    
+
     public int externalState() {
         return 115;
     }
