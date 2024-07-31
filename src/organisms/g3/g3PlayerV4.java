@@ -56,7 +56,7 @@ public class g3PlayerV4 implements OrganismsPlayer {
         int stayPutUnits = game.s();
 
         int repValue = 75;
-        int repValueChange = -25;
+        int repValueChange = -100;
 
         ArrayList<Integer> moveDecisions = new ArrayList<>();
         ArrayList<Integer> repDecisions = new ArrayList<>();
