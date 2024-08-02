@@ -79,8 +79,6 @@ public class Group7Player implements OrganismsPlayer {
 
         this.energy = energyLeft;
 
-
-        //if present square has food or coolDown is 0, stay put
         //consider moving to allow the chance for more food to generate
         if (0 < foodHere && foodHere < 3) {//best upper limit is 3, original limit was 4
             return Move.movement(Action.STAY_PUT);
@@ -90,6 +88,9 @@ public class Group7Player implements OrganismsPlayer {
             for (int i=0; i<4; ++i) {
                 if (food[i] && neighbors[i] == -1) {
                     action = dirs[i];
+                    if(energyLeft>250){
+                        return Move.reproduce(action,dna);
+                    }
                     return Move.movement(action);
                 }
                 if (neighbors[i] == -1) {
@@ -103,7 +104,7 @@ public class Group7Player implements OrganismsPlayer {
                     return Move.movement(Action.STAY_PUT);
                 }
 
-                if(energyLeft<250){//best so far 200
+                if(energyLeft<250){//best so far 200, 250 submitted
                     return Move.movement(Action.STAY_PUT);
                 }
 
@@ -148,4 +149,3 @@ public class Group7Player implements OrganismsPlayer {
         return 240+(this.energy/50);
     }
 }
-

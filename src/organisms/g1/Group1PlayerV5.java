@@ -17,7 +17,7 @@ public class Group1PlayerV5 implements OrganismsPlayer {
 
     // 设置最小和最大探索概率
     private final double minProbability = 0.0;
-    private final double maxProbability = 0.5;
+    private final double maxProbability = 0.7;
 
     @Override
     public void register(OrganismsGame game, int dna) throws Exception {
@@ -68,7 +68,7 @@ public class Group1PlayerV5 implements OrganismsPlayer {
         }
 
         // 3. 根据能量水平使用非线性概率函数决定是否探索
-        if (shouldExplore(energyLeft) && !highCollision(neighborN, neighborE, neighborS, neighborW)) {
+        if (shouldExplore(energyLeft)) {
             // 4. 探索方向在东南西北四个方向中随机选择两个
             Action explorationDirection = preferredDirections[random.nextInt(2)];
             return Move.movement(explorationDirection);
@@ -103,21 +103,4 @@ public class Group1PlayerV5 implements OrganismsPlayer {
         return random.nextDouble() < probability;
     }
 
-    private boolean highCollision(int neighborN, int neighborE,
-                                  int neighborS, int neighborW) {
-        int score = 0;
-        if (neighborN == dna) {
-            score++;
-        }
-        if (neighborE == dna) {
-            score++;
-        }
-        if (neighborS == dna) {
-            score++;
-        }
-        if (neighborW == dna) {
-            score++;
-        }
-        return score > 3;
-    }
 }

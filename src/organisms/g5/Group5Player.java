@@ -5,11 +5,10 @@ import organisms.ui.OrganismsGame;
 import organisms.OrganismsPlayer;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Optional;
-import java.util.Random;
 
 public class Group5Player implements OrganismsPlayer {
-
     enum OCCUPANT {
         empty,              // i.e no foreign object/organism on this square
         other_organism,     // can be of the same or a different species
@@ -17,121 +16,96 @@ public class Group5Player implements OrganismsPlayer {
     }
 
     private OrganismsGame game;
-    private int currentFoodHere = 0;
-    private int generationCount = 0;
-    private Random random = new Random();
-    private int externalState = 0;
-    private int stepsInDirection = 0;
+
+    private int REPRODUCTION_ENERGY_THRESHOLD; // energy threshold to force reproduce
+    private int HIGH_ENERGY_THRESHOLD;
+    private int MEDIUM_ENERGY_THRESHOLD;
+    private int LOW_ENERGY_THRESHOLD;
+
+    private final int STEPS_WITHOUT_FOOD_THRESHOLD = 6;
     private int stepsWithoutFood = 0;
+
+    private final int MAX_GENERATION = 1;
+    private int generationCount = 0;
+
+    private int inheritState = 0;
 
     @Override
     public void register(OrganismsGame game, int dna) throws Exception {
         this.game = game;
+        this.inheritState = dna;
+
+        this.REPRODUCTION_ENERGY_THRESHOLD = (int) (game.M() * 0.53);
+        this.HIGH_ENERGY_THRESHOLD = (int) (game.M() * 0.48);
+        this.MEDIUM_ENERGY_THRESHOLD = (int) (game.M() * 0.26);
+        this.LOW_ENERGY_THRESHOLD = (int) (game.M() * 0.13);
     }
 
     @Override
-    public String name() {
-        return "Group 5 Player";
-    }
+    public String name() { return "Group 5 Player"; }
 
     @Override
-    public Color color() {
-        return new Color(200, 200, 200, 255);
+    public Color color() { return new Color(200, 220, 240, 255); }
+
+
+    /*
+     * Randomly chooses the direction to move where food is present
+     * */
+    private Move moveTowardsFood(boolean foodN, boolean foodE, boolean foodS, boolean foodW) {
+        ArrayList<Move> stepDirection = new ArrayList<>();
+
+        if (foodN) { stepDirection.add(Move.movement(Action.NORTH)); }
+        if (foodE) { stepDirection.add(Move.movement(Action.EAST)); }
+        if (foodS) { stepDirection.add(Move.movement(Action.SOUTH)); }
+        if (foodW) { stepDirection.add(Move.movement(Action.WEST)); }
+
+        return stepDirection.get((int) (Math.random() * stepDirection.size()));
     }
 
-    @Override
-    public Move move(int foodHere, int energyLeft, boolean foodN, boolean foodE, boolean foodS, boolean foodW,
-                     int neighborN, int neighborE, int neighborS, int neighborW) throws Exception {
+    /*
+     * When reproducing, set the DNA as the direction where the child will move for the next few steps
+     * */
+    private Move reproduceOnControlledDirection() {
+        int actionIndex = (int) (Math.random() * 4) + 1;
+        Action actionChoice = Action.fromInt(actionIndex);
 
-        // force reproduction at high energy
-        if (energyLeft >= 499) {
-            int actionIndex = this.random.nextInt(Action.getNumActions());
-            Action actionChoice = Action.fromInt(actionIndex);
+        return Move.reproduce(actionChoice, actionIndex);
+    }
 
-            return Move.reproduce(actionChoice, actionIndex);
-        }
-
-        // If there is food, stay put until all food is consumed
-        // resets the counter of how many steps have been traveled without food
-        if (foodHere > 0) {
-            currentFoodHere = foodHere;
-            stepsWithoutFood = 0; // Reset steps without food
-            System.out.println("Action " + Action.STAY_PUT.toString() + ", " + foodHere + " of food remaining on this square.");
-            return Move.movement(Action.STAY_PUT);
-
-        } else if (currentFoodHere > 0) {
-            currentFoodHere = foodHere; // update the remaining food
-            System.out.println("Action " + Action.STAY_PUT.toString() + ", " + foodHere + " of food remaining on this square.");
-
-            return Move.movement(Action.STAY_PUT);
-        }
-
-        // If external state is not 0, move in the direction indicated by external state
-        // increment counter for movement
-        if (externalState != 0) {
-            stepsInDirection++;
-            Action moveAction = switch (externalState) {
-                case 1 -> Action.NORTH;
-                case 2 -> Action.EAST;
-                case 3 -> Action.SOUTH;
-                case 4 -> Action.WEST;
-                default -> Action.STAY_PUT;
-            };
-
-            System.out.println("Action " + moveAction.toString() + " , moving in the direction of external state.");
-
-            // resets externalState which is used when a child organism is born
-            if (stepsInDirection >= 2) {
-                externalState = 0;
-                stepsInDirection = 0;
-            }
-
-            // not still just 'given birth', continue moving in the direction it was given birth
-            return Move.movement(moveAction);
-        }
-
-        // Check if there's food nearby and move towards it
-        if (foodN) {
-            System.out.println("Action NORTH, moving towards food.");
-            return Move.movement(Action.NORTH);
-        } else if (foodE) {
-            System.out.println("Action EAST, moving towards food.");
-            return Move.movement(Action.EAST);
-        } else if (foodS) {
-            System.out.println("Action SOUTH, moving towards food.");
-            return Move.movement(Action.SOUTH);
-        } else if (foodW) {
-            System.out.println("Action WEST, moving towards food.");
-            return Move.movement(Action.WEST);
-        }
-
-        // Increase steps without food
-        stepsWithoutFood++;
-
-        // If no food is found after 9 steps, start splitting for 2 generations
-        if (stepsWithoutFood >= 9) {
-            stepsWithoutFood = 0; // Reset steps without food
-
-            // if the current organism is not a grandpa
-            if (generationCount < 2) {
-                generationCount++;
-
-                System.out.println("Action REPRODUCE, generation count: " + generationCount);
-                int actionIndex = this.random.nextInt(Action.getNumActions());
-                Action actionChoice = Action.fromInt(actionIndex);
-
-                externalState = actionChoice.ordinal() + 1; // Set the direction of reproduction as the external state
-                return Move.reproduce(actionChoice, actionIndex);
-            } else {
-                generationCount = 0;
-            }
-        }
-
+    /*
+     * Controls the parameters for the biases based on current energy level
+     * */
+    private double[] biasController(int energyLeft) {
         // Calculate biases param
-        double foodBiase = 15.0;
-        double energyBiase = 8.0;
-        double repoBiase = 5.0;
-        double[] biases = applyBias(foodBiase, energyBiase, repoBiase);
+        double foodBias = 4.5;
+        double energyBias = 4.5;
+        double repoBias;
+
+        if (energyLeft >= HIGH_ENERGY_THRESHOLD) {
+            foodBias = 2.5;
+            repoBias = 10;
+        } else if (energyLeft >= MEDIUM_ENERGY_THRESHOLD) {
+            repoBias = 7.5;
+            energyBias = 0;
+        } else if (energyLeft >= LOW_ENERGY_THRESHOLD) {
+            repoBias = 2.5;
+            foodBias = 7.5;
+            energyBias = 1;
+        } else {
+            repoBias = 2;
+            foodBias = 10;
+            energyBias = 9.5;
+        }
+
+        return applyBias(foodBias, energyBias, repoBias);
+    }
+
+    /*
+     * Finds the best move from using biases & current energy level
+     * */
+    private Move generateBestMove(int energyLeft) {
+        // get the best move with biases
+        double[] biases = biasController(energyLeft);
 
         // Optimize move based on netBenefit
         double maxBenefit = Double.NEGATIVE_INFINITY;
@@ -139,25 +113,62 @@ public class Group5Player implements OrganismsPlayer {
 
         // generate occupant based on current organism condition
         for (Action action : Action.values()) {
-            if (action == Action.STAY_PUT && energyLeft > 50) continue; // Exclude STAY_PUT if energy is high
             boolean move = (action != Action.STAY_PUT);
 
-            OCCUPANT occupant = (action == Action.STAY_PUT) ? OCCUPANT.empty :
-                    (foodN && action == Action.NORTH) ||
-                            (foodE && action == Action.EAST) ||
-                            (foodS && action == Action.SOUTH) ||
-                            (foodW && action == Action.WEST) ? OCCUPANT.food : OCCUPANT.empty;
-
             // generate maximum benefit move
-            double benefit = netBenefit(move, occupant, false, Optional.of(biases), energyLeft);
+            double benefit = netBenefit(move, OCCUPANT.empty, false, Optional.of(biases), energyLeft);
             if (benefit > maxBenefit) {
                 maxBenefit = benefit;
                 bestMove = action;
             }
         }
 
-        System.out.println("Action " + bestMove.toString() + " , chosen based on net benefit.");
+        //System.out.println("Action " + bestMove.toString() + " , chosen based on net benefit.");
         return Move.movement(bestMove);
+    }
+
+    @Override
+    public Move move(int foodHere, int energyLeft,
+                     boolean foodN, boolean foodE, boolean foodS, boolean foodW,
+                     int neighborN, int neighborE, int neighborS, int neighborW) throws Exception {
+
+        // 1st priority: force reproduction at high energy
+        if (energyLeft >= REPRODUCTION_ENERGY_THRESHOLD) { return reproduceOnControlledDirection(); }
+
+        // 2nd priority: If there is food on current square, stay put
+        //               If there is food on adjacent square, move
+        if (foodHere > 0) {
+            stepsWithoutFood = 0;
+            return Move.movement(Action.STAY_PUT);
+        } else if (foodN || foodE || foodS || foodW) {
+            return moveTowardsFood(foodN, foodE, foodS, foodW);
+        }
+
+        // 3rd priority: reproduce for 2 generations if no food is found after 5 steps
+        if (stepsWithoutFood >= STEPS_WITHOUT_FOOD_THRESHOLD && generationCount < MAX_GENERATION) {
+            generationCount++;
+            reproduceOnControlledDirection();
+        } else if (stepsWithoutFood >= STEPS_WITHOUT_FOOD_THRESHOLD && generationCount > MAX_GENERATION) {
+            stepsWithoutFood = 0;
+        }
+
+        // 4th priority: If inherited state is not 0, move in the direction indicated by inherited state
+        if (inheritState != 0) {
+            Action moveAction = switch (inheritState) {
+                case 1 -> Action.WEST;
+                case 2 -> Action.EAST;
+                case 3 -> Action.NORTH;
+                case 4 -> Action.SOUTH;
+                default -> Action.STAY_PUT;
+            };
+
+            // resets inherit state so it moves normally
+            inheritState = 0;
+            return Move.movement(moveAction);
+        }
+
+        stepsWithoutFood++;
+        return generateBestMove(energyLeft);
     }
 
     protected double netBenefit(boolean move, OCCUPANT occupant, boolean reproduce, Optional<double[]> override, int energyLeft) {
@@ -185,7 +196,7 @@ public class Group5Player implements OrganismsPlayer {
 
         if (!move) {
             if (occupant.equals(OCCUPANT.other_organism)) throw new IllegalArgumentException("Bad argument! Conflicting values for move and occupant.");
-            double penalty = (energyLeft > 300) ? 50 : 0; // Apply penalty if energy is high
+            double penalty = (energyLeft > REPRODUCTION_ENERGY_THRESHOLD) ? 35 : 0; // Apply penalty if energy is high
             if (occupant.equals(OCCUPANT.food)) return u - s - penalty; // gain from food (eat) - cost of staying (x) - penalty
             else return -s - penalty;
         } else {
@@ -230,7 +241,5 @@ public class Group5Player implements OrganismsPlayer {
     }
 
     @Override
-    public int externalState() throws Exception {
-        return externalState;
-    }
+    public int externalState() throws Exception { return 0; }
 }

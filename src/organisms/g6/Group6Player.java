@@ -42,28 +42,35 @@ public class Group6Player implements OrganismsPlayer {
     public Move move(int foodHere, int energyLeft, boolean foodN, boolean foodE,
                      boolean foodS, boolean foodW, int neighborN, int neighborE,
                      int neighborS, int neighborW) {
-        if (shouldReproduce(energyLeft, neighborN, neighborE, neighborS, neighborW)) {
+        // Reproduction logic from Group4Player2
+        if (energyLeft > M/1.666667 && (foodN || foodE || foodS || foodW)) {
+            //Reproduce if energy is sufficient and there is food around
+            return reproduceOnFood(foodN, foodE, foodS, foodW, neighborN, neighborE, neighborS, neighborW);
+        } else if (energyLeft > M/1.25) {
+            // reproduce if no food is present but energy is high
             return reproduce(neighborN, neighborE, neighborS, neighborW);
-        } else if (shouldStayPut(foodHere, energyLeft)) {
-            return Move.movement(Action.STAY_PUT);
-        } else {
-            return moveToFoodOrRandom(foodN, foodE, foodS, foodW, neighborN, neighborE, neighborS, neighborW, energyLeft);
         }
-    }
 
-    private boolean shouldReproduce(int energyLeft, int neighborN, int neighborE, int neighborS, int neighborW) {
-        // Check if reproduction is possible
-        return energyLeft > M / 2 && hasEmptyAdjacentCell(neighborN, neighborE, neighborS, neighborW);
-    }
+        // Existing logic for staying put and moving
+        if (shouldStayPut(foodHere, energyLeft)) {
+            return Move.movement(Action.STAY_PUT);
+        }
 
+        return moveToFoodOrRandom(foodN, foodE, foodS, foodW, neighborN, neighborE, neighborS, neighborW, energyLeft);
+    }
+    private Move reproduceOnFood(boolean foodN, boolean foodE, boolean foodS, boolean foodW,
+                                 int neighborN, int neighborE, int neighborS, int neighborW) {
+        if (foodN && neighborN == -1) return Move.reproduce(Action.NORTH, random.nextInt());
+        if (foodE && neighborE == -1) return Move.reproduce(Action.EAST, random.nextInt());
+        if (foodS && neighborS == -1) return Move.reproduce(Action.SOUTH, random.nextInt());
+        if (foodW && neighborW == -1) return Move.reproduce(Action.WEST, random.nextInt());
+
+        // Default to any empty space if somehow no food-adjacent empty cell is available
+        return reproduce(neighborN, neighborE, neighborS, neighborW);
+    }
     private boolean shouldStayPut(int foodHere, int energyLeft) {
         // Stay put if there's food here and energy is not full
-        return foodHere > 0 && energyLeft < M - u;
-    }
-
-    private boolean hasEmptyAdjacentCell(int neighborN, int neighborE, int neighborS, int neighborW) {
-        // Check for any empty adjacent cell
-        return neighborN == -1 || neighborE == -1 || neighborS == -1 || neighborW == -1;
+        return foodHere > 0 && energyLeft < v*3 ;
     }
 
     private Move reproduce(int neighborN, int neighborE, int neighborS, int neighborW) {
@@ -97,7 +104,7 @@ public class Group6Player implements OrganismsPlayer {
         }
 
         // If no food is found nearby for a few moves, prioritize staying put to save energy
-        if (movesSinceFood > 2) {
+        if (movesSinceFood > 1) {
             return Move.movement(Action.STAY_PUT);
         }
 
@@ -122,6 +129,6 @@ public class Group6Player implements OrganismsPlayer {
 
     @Override
     public int externalState() {
-        return 0;
+        return dna;
     }
 }
